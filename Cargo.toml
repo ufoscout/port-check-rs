@@ -1,0 +1,12 @@
+[package]
+name = "port_check"
+version = "1.0.0"
+authors = ["ufoscout <ufoscout@gmail.com>"]
+edition = "2018"
+license = "MIT"
+description = "Get a free local port or check if a port somewhere is reachable."
+
+keywords = ["port", "network"]
+categories = ["network-programming"]
+
+[dependencies]
