@@ -1,8 +1,14 @@
-use std::net::{Ipv4Addr, SocketAddrV4, TcpListener, TcpStream, ToSocketAddrs};
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, TcpListener, TcpStream, ToSocketAddrs};
+use std::time::Duration;
 
 /// Attempts a TCP connection to an address an returns whether it succeeded
 pub fn is_port_reachable<A: ToSocketAddrs>(address: A) -> bool {
     TcpStream::connect(address).is_ok()
+}
+
+/// Attempts a TCP connection to an address an returns whether it succeeded
+pub fn is_port_reachable_with_timeout(address: &SocketAddr, timeout: Duration) -> bool {
+    TcpStream::connect_timeout(address, timeout).is_ok()
 }
 
 /// Returns whether a port is available on the localhost
@@ -23,12 +29,8 @@ pub fn free_local_port_in_range(min: u16, max: u16) -> Option<u16> {
 pub fn free_local_port() -> Option<u16> {
     let socket = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0);
     TcpListener::bind(socket)
-        .and_then(|listener| {
-            listener.local_addr()
-        })
-        .and_then(|addr| {
-            Ok(addr.port())
-        })
+        .and_then(|listener| listener.local_addr())
+        .and_then(|addr| Ok(addr.port()))
         .ok()
 }
 
@@ -37,6 +39,7 @@ mod tests {
 
     use super::*;
     use std::net::{Ipv4Addr, SocketAddrV4, TcpListener};
+    use std::time::Instant;
     use std::{thread, time::Duration};
 
     #[test]
@@ -86,5 +89,21 @@ mod tests {
             thread::sleep(Duration::from_millis(10));
         }
         assert!(port_reachable)
+    }
+
+    #[test]
+    fn is_port_reachable_should_respect_timeout() {
+        let timeout = 100;
+        let start = Instant::now();
+
+        assert!(!is_port_reachable_with_timeout(
+            &"198.19.255.255:1".parse().unwrap(),
+            Duration::from_millis(timeout)
+        ));
+
+        let elapsed = (start.elapsed().subsec_nanos() / 1000000) as u64;
+        println!("Millis elapsed {}", elapsed);
+        assert!(elapsed >= timeout);
+        assert!(elapsed < 2 * timeout);
     }
 }
