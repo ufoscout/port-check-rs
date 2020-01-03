@@ -1,14 +1,27 @@
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, TcpListener, TcpStream, ToSocketAddrs};
+use std::net::{Ipv4Addr, SocketAddrV4, TcpListener, TcpStream, ToSocketAddrs};
 use std::time::Duration;
+use log::*;
 
-/// Attempts a TCP connection to an address an returns whether it succeeded
+/// Attempts a TCP connection to an address and returns whether it succeeded
 pub fn is_port_reachable<A: ToSocketAddrs>(address: A) -> bool {
     TcpStream::connect(address).is_ok()
 }
 
-/// Attempts a TCP connection to an address an returns whether it succeeded
-pub fn is_port_reachable_with_timeout(address: &SocketAddr, timeout: Duration) -> bool {
-    TcpStream::connect_timeout(address, timeout).is_ok()
+/// Attempts a TCP connection to an address and returns whether it succeeded
+pub fn is_port_reachable_with_timeout<A: ToSocketAddrs>(address: A, timeout: Duration) -> bool {
+    match address.to_socket_addrs() {
+        Ok(addrs) => {
+            let mut reachable = true;
+            for address in addrs {
+                reachable = reachable && TcpStream::connect_timeout(&address, timeout).is_ok();
+            };
+            reachable
+        },
+        Err(err) => {
+            warn!("Cannot parse address. Err: {}", err);
+            false
+        }
+    }
 }
 
 /// Returns whether a port is available on the localhost
@@ -66,6 +79,12 @@ mod tests {
     }
 
     #[test]
+    fn free_port_should_resolve_domain_name() {
+        let available_port = free_local_port().unwrap();
+        assert!(!is_port_reachable(&format!("localhost:{}", available_port)));
+    }
+
+    #[test]
     fn an_open_port_should_be_reachable() {
         let socket = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0);
         let listener = TcpListener::bind(socket).unwrap();
@@ -97,7 +116,7 @@ mod tests {
         let start = Instant::now();
 
         assert!(!is_port_reachable_with_timeout(
-            &"198.19.255.255:1".parse().unwrap(),
+            "198.19.255.255:1",
             Duration::from_millis(timeout)
         ));
 
@@ -105,5 +124,40 @@ mod tests {
         println!("Millis elapsed {}", elapsed);
         assert!(elapsed >= timeout);
         assert!(elapsed < 2 * timeout);
+    }
+
+    #[test]
+    fn free_port_with_timeout_should_resolve_domain_name() {
+        let available_port = free_local_port().unwrap();
+        assert!(!is_port_reachable_with_timeout(
+            &format!("localhost:{}", available_port),
+            Duration::from_millis(10)
+        ));
+    }
+
+    #[test]
+    fn an_open_port_should_be_reachable_with_timeout() {
+        let socket = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0);
+        let listener = TcpListener::bind(socket).unwrap();
+        let listener_port = listener.local_addr().unwrap().to_string();
+
+        thread::spawn(move || loop {
+            match listener.accept() {
+                Ok(_) => {
+                    println!("Connection received!");
+                }
+                Err(_) => {
+                    println!("Error in received connection!");
+                }
+            }
+        });
+
+        let mut port_reachable = false;
+        while !port_reachable {
+            println!("Check for available connections on {}", &listener_port);
+            port_reachable = is_port_reachable_with_timeout(&listener_port, Duration::from_secs(1));
+            thread::sleep(Duration::from_millis(10));
+        }
+        assert!(port_reachable)
     }
 }

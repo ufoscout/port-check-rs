@@ -13,3 +13,4 @@ keywords = ["port", "network"]
 categories = ["network-programming"]
 
 [dependencies]
+log = "0.4"

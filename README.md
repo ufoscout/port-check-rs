@@ -13,7 +13,7 @@ let free_port_in_range = port_check::free_local_port_in_range(10000, 15000);
 // check whether a remote port is reachable
 let is_reachable = port_check::is_port_reachable("192.0.2.0:8080");
 // or
-let is_reachable = is_port_reachable_with_timeout(&"192.0.2.0:8080".parse().expect("the IP should be correct"), Duration::from_millis(10_000));
+let is_reachable = is_port_reachable_with_timeout("192.0.2.0:8080", Duration::from_millis(10_000));
 
 
 ```
