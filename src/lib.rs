@@ -1,6 +1,5 @@
 use std::net::{Ipv4Addr, SocketAddrV4, TcpListener, TcpStream, ToSocketAddrs};
 use std::time::Duration;
-use log::*;
 
 /// Attempts a TCP connection to an address and returns whether it succeeded
 pub fn is_port_reachable<A: ToSocketAddrs>(address: A) -> bool {
@@ -11,14 +10,14 @@ pub fn is_port_reachable<A: ToSocketAddrs>(address: A) -> bool {
 pub fn is_port_reachable_with_timeout<A: ToSocketAddrs>(address: A, timeout: Duration) -> bool {
     match address.to_socket_addrs() {
         Ok(addrs) => {
-            let mut reachable = true;
             for address in addrs {
-                reachable = reachable && TcpStream::connect_timeout(&address, timeout).is_ok();
+                if TcpStream::connect_timeout(&address, timeout).is_ok() {
+                    return true;
+                }
             };
-            reachable
+            false
         },
-        Err(err) => {
-            warn!("Cannot parse address. Err: {}", err);
+        Err(_err) => {
             false
         }
     }
