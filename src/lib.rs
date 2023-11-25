@@ -39,7 +39,8 @@ pub fn free_local_port_in_range(min: u16, max: u16) -> Option<u16> {
 pub fn free_local_port() -> Option<u16> {
     let socket = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0);
     TcpListener::bind(socket)
-        .and_then(|listener| listener.local_addr()).map(|addr| addr.port())
+        .and_then(|listener| listener.local_addr())
+        .map(|addr| addr.port())
         .ok()
 }
 
