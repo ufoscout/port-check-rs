@@ -38,7 +38,7 @@ jobs:
 
       - name: test
         run: |
-          carg test
+          cargo test
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
