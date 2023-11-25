@@ -1,7 +1,7 @@
 # port_check
 ![crates.io](https://img.shields.io/crates/v/port_check.svg)
-![Build Status](https://github.com/ufoscout/port_check/actions/workflows/build_and_test.yml/badge.svg)
-[![codecov](https://codecov.io/gh/ufoscout/port_check/branch/master/graph/badge.svg)](https://codecov.io/gh/ufoscout/port_check)
+![Build Status](https://github.com/ufoscout/port-check-rs/actions/workflows/build_and_test.yml/badge.svg)
+[![codecov](https://codecov.io/gh/ufoscout/port-check-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/ufoscout/port-check-rs)
 
 A simple rust library to get a free local port or to check if a port somewhere is reachable
 
