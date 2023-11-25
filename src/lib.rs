@@ -14,12 +14,10 @@ pub fn is_port_reachable_with_timeout<A: ToSocketAddrs>(address: A, timeout: Dur
                 if TcpStream::connect_timeout(&address, timeout).is_ok() {
                     return true;
                 }
-            };
-            false
-        },
-        Err(_err) => {
+            }
             false
         }
+        Err(_err) => false,
     }
 }
 
