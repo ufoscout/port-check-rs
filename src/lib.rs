@@ -39,8 +39,7 @@ pub fn free_local_port_in_range(min: u16, max: u16) -> Option<u16> {
 pub fn free_local_port() -> Option<u16> {
     let socket = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0);
     TcpListener::bind(socket)
-        .and_then(|listener| listener.local_addr())
-        .and_then(|addr| Ok(addr.port()))
+        .and_then(|listener| listener.local_addr()).map(|addr| addr.port())
         .ok()
 }
 
@@ -72,13 +71,13 @@ mod tests {
     #[test]
     fn a_free_port_should_not_be_reachable() {
         let available_port = free_local_port().unwrap();
-        assert!(!is_port_reachable(&format!("127.0.0.1:{}", available_port)));
+        assert!(!is_port_reachable(format!("127.0.0.1:{}", available_port)));
     }
 
     #[test]
     fn free_port_should_resolve_domain_name() {
         let available_port = free_local_port().unwrap();
-        assert!(!is_port_reachable(&format!("localhost:{}", available_port)));
+        assert!(!is_port_reachable(format!("localhost:{}", available_port)));
     }
 
     #[test]
@@ -117,7 +116,7 @@ mod tests {
             Duration::from_millis(timeout)
         ));
 
-        let elapsed = (start.elapsed().subsec_nanos() / 1000000) as u64;
+        let elapsed = start.elapsed().subsec_millis() as u64;
         println!("Millis elapsed {}", elapsed);
         assert!(elapsed >= timeout);
         assert!(elapsed < 2 * timeout);
@@ -127,7 +126,7 @@ mod tests {
     fn free_port_with_timeout_should_resolve_domain_name() {
         let available_port = free_local_port().unwrap();
         assert!(!is_port_reachable_with_timeout(
-            &format!("localhost:{}", available_port),
+            format!("localhost:{}", available_port),
             Duration::from_millis(10)
         ));
     }
