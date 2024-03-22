@@ -1,8 +1,8 @@
 [package]
 name = "port_check"
-version = "0.1.5"
+version = "0.2.0"
 authors = ["ufoscout <ufoscout@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 description = "Get a free local port or check if a port somewhere is reachable."
 readme = "README.md"
@@ -11,3 +11,6 @@ repository = "https://github.com/ufoscout/port-check-rs"
 
 keywords = ["port", "network"]
 categories = ["network-programming"]
+
+[dev-dependencies]
+serial_test = "3.0.0"
