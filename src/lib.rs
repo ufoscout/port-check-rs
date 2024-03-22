@@ -17,6 +17,24 @@ impl From<u16> for Port {
     }
 }
 
+impl Port {
+    /// Creates a new IPv4 port with the specified value
+    pub fn new(port: u16) -> Self {
+        Port::Ipv4(port)
+    }
+
+    /// Creates a new IPv4 port with the specified value
+    pub fn ipv4(port: u16) -> Self {
+        Port::Ipv4(port)
+    }
+
+    /// Creates a new IPv6 port with the specified value
+    pub fn ipv6(port: u16) -> Self {
+        Port::Ipv6(port)
+    }
+
+}
+
 /// Represents a port range for an IP address
 pub enum Ports<R: RangeBounds<u16> + std::iter::Iterator<Item = u16>> {
     /// Represents a port range for an IPv4 address
@@ -183,8 +201,10 @@ mod tests {
 
         // The ipv4 port should not be free
         assert!(!is_local_port_free(port));
+        assert!(!is_local_port_free(Port::ipv4(port)));
         assert!(!is_local_ipv4_port_free(port));
         assert!(is_local_ipv6_port_free(port));
+        assert!(is_local_port_free(Port::ipv6(port)));
 
         // Start a TCP listener on the IPv6 port
         let socket = SocketAddrV6::new(Ipv6Addr::LOCALHOST, ipv4_and_ipv6_free_port, 0, 0);
@@ -193,7 +213,9 @@ mod tests {
         // The ipv6 port should not be free
         assert!(!is_local_port_free(port));
         assert!(!is_local_ipv4_port_free(port));
+        assert!(!is_local_port_free(Port::ipv4(port)));
         assert!(!is_local_ipv6_port_free(port));
+        assert!(!is_local_port_free(Port::ipv6(port)));
 
     }
 
@@ -209,7 +231,9 @@ mod tests {
         // The ipv6 port should not be free
         assert!(is_local_port_free(port));
         assert!(is_local_ipv4_port_free(port));
+        assert!(is_local_port_free(Port::ipv4(port)));
         assert!(!is_local_ipv6_port_free(port));
+        assert!(!is_local_port_free(Port::ipv6(port)));
 
                 // Start a TCP listener on the IPv4 port
                 let socket = SocketAddrV4::new(Ipv4Addr::LOCALHOST, ipv4_and_ipv6_free_port);
@@ -218,7 +242,9 @@ mod tests {
                 // The ipv4 port should not be free
         assert!(!is_local_port_free(port));
         assert!(!is_local_ipv4_port_free(port));
+        assert!(!is_local_port_free(Port::ipv4(port)));
         assert!(!is_local_ipv6_port_free(port));
+        assert!(!is_local_port_free(Port::ipv6(port)));
     }
 
     #[test]
@@ -269,7 +295,9 @@ mod tests {
         let (_port, _handle) = start_tcp_listner(socket);
 
         assert!(is_port_reachable(address_v4));
+        assert!(free_local_port_in_range(Ports::ipv4(ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port)).is_none());
         assert!(!is_port_reachable(address_v6));
+        assert!(free_local_port_in_range(Ports::ipv6(ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port)).is_some());
     }
 
     #[test]
@@ -287,7 +315,9 @@ mod tests {
         let (_port, _handle) = start_tcp_listner(socket);
         
         assert!(!is_port_reachable(address_v4));
+        assert!(free_local_port_in_range(Ports::ipv4(ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port)).is_some());
         assert!(is_port_reachable(address_v6));
+        assert!(free_local_port_in_range(Ports::ipv6(ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port)).is_none());
     }
 
     #[test]
