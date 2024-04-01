@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use std::net::{
     Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6, TcpListener, TcpStream, ToSocketAddrs,
 };
