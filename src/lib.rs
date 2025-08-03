@@ -295,7 +295,6 @@ pub fn with_free_port<T, E, F: Fn(u16) -> Result<T, E>>(f: F) -> Option<(T, u16)
 ///     Ok(listener)
 /// }).unwrap();
 /// ```
-
 pub fn with_free_ipv4_port<T, E, F: Fn(u16) -> Result<T, E>>(f: F) -> Option<(T, u16)> {
     while let Some(port) = free_local_ipv4_port() {
         if let Ok(value) = f(port) {
@@ -588,7 +587,7 @@ mod tests {
     #[serial]
     fn free_port_should_resolve_domain_name() {
         let available_port = free_local_port().unwrap();
-        assert!(!is_port_reachable(format!("localhost:{}", available_port)));
+        assert!(!is_port_reachable(format!("localhost:{available_port}")));
     }
 
     #[test]
@@ -603,7 +602,7 @@ mod tests {
         ));
 
         let elapsed = start.elapsed().subsec_millis() as u64;
-        println!("Millis elapsed {}", elapsed);
+        println!("Millis elapsed {elapsed}");
         assert!(elapsed >= timeout);
         assert!(elapsed < 2 * timeout);
     }
@@ -613,7 +612,7 @@ mod tests {
     fn free_port_with_timeout_should_resolve_domain_name() {
         let available_port = free_local_port().unwrap();
         assert!(!is_port_reachable_with_timeout(
-            format!("localhost:{}", available_port),
+            format!("localhost:{available_port}"),
             Duration::from_millis(10)
         ));
     }
