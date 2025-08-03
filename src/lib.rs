@@ -164,6 +164,124 @@ pub fn free_local_ipv6_port() -> Option<u16> {
         .ok()
 }
 
+/// Alias for `with_free_ipv4_port`
+/// 
+/// Attempts to find a free IPv4 port on localhost and applies the provided function `f` to it.
+/// 
+/// This function iterates over available ports on the localhost IPv4 interface,
+/// invoking the passed closure `f` with the port number. If the closure returns
+/// an `Ok` result, the function returns `Some` with the result. If no suitable
+/// port is found or the closure does not return `Ok`, it returns `None`.
+/// 
+/// This function is usefull to deal with the TOC/TOU race condition, where
+/// the port might be used by another process before it is bound to a socket.
+/// 
+/// # Arguments
+///
+/// - `f`: A closure that is applied to each available port until it returns `Ok`.
+///
+/// # Returns
+///
+/// An `Option` containing the successful result of the closure and the used port, or `None` if no port 
+/// was suitable or the closure never returned `Ok`.
+/// 
+/// # Example
+///
+/// ```
+/// use port_check::*;
+/// use std::net::*
+/// 
+/// let (server, port) = with_free_ipv4_port(|port| {
+///     // Trying to use the port. If it fails, we try again
+///     let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))?;
+///     Ok(listener)
+/// })?;
+/// ```
+#[inline]
+pub fn with_free_port<T, E, F: Fn(u16) -> Result<T, E>>(f: F) -> Option<(T, u16)> {
+    with_free_ipv4_port(f)
+}
+
+/// Attempts to find a free IPv4 port on localhost and applies the provided function `f` to it.
+/// 
+/// This function delegates to `with_free_port`, using the IPv4 interface to search for available ports.
+/// It invokes the given closure `f` with each available port. If the closure returns an `Ok` result, 
+/// the function returns `Some` with this result. If no suitable port is found or the closure never 
+/// returns `Ok`, it returns `None`.
+/// 
+/// This function helps mitigate TOC/TOU race conditions by ensuring that the port is bound 
+/// immediately after being checked for availability.
+/// 
+/// # Arguments
+///
+/// - `f`: A closure that is applied to each available IPv4 port until it returns `Ok`.
+///
+/// # Returns
+///
+/// An `Option` containing the successful result of the closure and the used port, or `None` if no port 
+/// was suitable or the closure never returned `Ok`.
+///
+/// # Example
+///
+/// ```
+/// use port_check::*;
+/// use std::net::*;
+/// 
+/// let (server, port) = with_free_ipv4_port(|port| {
+///     let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))?;
+///     Ok(listener)
+/// })?;
+/// ```
+
+pub fn with_free_ipv4_port<T, E, F: Fn(u16) -> Result<T, E>>(f: F) -> Option<(T, u16)> {
+    while let Some(port) = free_local_ipv4_port() {
+        if let Ok(value) = f(port) {
+            return Some((value, port));
+        }
+    }
+    None
+}
+
+/// Attempts to find a free IPv6 port on localhost and applies the provided function `f` to it.
+/// 
+/// This function iterates over available ports on the localhost IPv6 interface,
+/// invoking the passed closure `f` with the port number. If the closure returns
+/// an `Ok` result, the function returns `Some` with the result. If no suitable
+/// port is found or the closure does not return `Ok`, it returns `None`.
+/// 
+/// This function is usefull to deal with the TOC/TOU race condition, where
+/// the port might be used by another process before it is bound to a socket.
+/// 
+/// # Arguments
+///
+/// - `f`: A closure that is applied to each available port until it returns `Ok`.
+///
+/// # Returns
+///
+/// An `Option` containing the successful result of the closure and the used port, or `None` if no port 
+/// was suitable or the closure never returned `Ok`.
+/// 
+/// # Example
+///
+/// ```
+/// use port_check::*;
+/// use std::net::*
+/// 
+/// let (server, port) = with_free_ipv6_port(|port| {
+///     // Trying to use the port. If it fails, we try again
+///     let listener = TcpListener::bind(SocketAddrV6::new(Ipv6Addr::LOCALHOST, port, 0, 0))?;
+///     Ok(listener)
+/// })?;
+/// ```
+pub fn with_free_ipv6_port<T, E, F: Fn(u16) -> Result<T, E>>(f: F) -> Option<(T, u16)> {
+    while let Some(port) = free_local_ipv6_port() {
+        if let Ok(value) = f(port) {
+            return Some((value, port));
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -455,6 +573,63 @@ mod tests {
             SocketAddrV6::new(Ipv6Addr::LOCALHOST, available_port, 0, 0),
             Duration::from_millis(10)
         ));
+    }
+
+    /// A test that spawns 100 threads each trying to use a free port. The `with_free_port`
+    /// function should be able to find a free port.
+    #[test]
+    #[serial]
+    fn with_free_port_should_find_free_port() {
+        let ports = (0..100).map(|_| {
+            thread::spawn(move || {
+                with_free_port::<_, std::io::Error, _>(|port| {
+                    let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))?;
+                    Ok(listener)
+                })
+            })
+        });
+
+        for port in ports {
+            let (_result, _port) = port.join().unwrap().unwrap();
+        }
+    }
+
+    /// A test that spawns 100 threads each trying to use a free port. The `with_free_ipv4_port`
+    /// function should be able to find a free port.
+    #[test]
+    #[serial]
+    fn with_free_port_should_find_free_ipv4_port() {
+        let ports = (0..100).map(|_| {
+            thread::spawn(move || {
+                with_free_ipv4_port::<_, std::io::Error, _>(|port| {
+                    let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))?;
+                    Ok(listener)
+                })
+            })
+        });
+
+        for port in ports {
+            let (_result, _port) = port.join().unwrap().unwrap();
+        }
+    }
+
+        /// A test that spawns 100 threads each trying to use a free port. The `with_free_ipv6_port`
+    /// function should be able to find a free port.
+    #[test]
+    #[serial]
+    fn with_free_port_should_find_free_ipv6_port() {
+        let ports = (0..100).map(|_| {
+            thread::spawn(move || {
+                with_free_ipv6_port::<_, std::io::Error, _>(|port| {
+                    let listener = TcpListener::bind(SocketAddrV6::new(Ipv6Addr::LOCALHOST, port, 0, 0))?;
+                    Ok(listener)
+                })
+            })
+        });
+
+        for port in ports {
+            let (_result, _port) = port.join().unwrap().unwrap();
+        }
     }
 
     fn start_tcp_listner<A: ToSocketAddrs>(address: A) -> (u16, JoinHandle<()>) {
