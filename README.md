@@ -55,20 +55,20 @@ let is_ipv6_port_free = is_local_ipv6_port_free(free_ipv6_port);
 
 
 let (server, port) = with_free_port::<_, std::io::Error, _>(|port| {
-    // Trying to use the port. If it fails, we try again.
+    // Trying to use the port. If it fails, we try again with another port.
     let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))?;
     Ok(listener)
 }).unwrap();
 
 let (server, port) = with_free_ipv4_port::<_, std::io::Error, _>(|port| {
-    // Trying to use the port. If it fails, we try again.
+    // Trying to use the port. If it fails, we try again with another port.
     let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))?;
     Ok(listener)
 }).unwrap();
 
 
 let (server, port) = with_free_ipv6_port::<_, std::io::Error, _>(|port| {
-    // Trying to use the port. If it fails, we try again.
+    // Trying to use the port. If it fails, we try again with another port.
     let listener = TcpListener::bind(SocketAddrV6::new(Ipv6Addr::LOCALHOST, port, 0, 0))?;
     Ok(listener)
 }).unwrap();
