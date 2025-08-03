@@ -68,7 +68,7 @@ impl<R: RangeBounds<u16> + std::iter::Iterator<Item = u16>> From<R> for Ports<R>
     }
 }
 
-/// Attempts a TCP connection to an address and returns whether it succeeded
+/// Attempts a TCP connection to an address and returns whether it succeeded.
 pub fn is_port_reachable<A: ToSocketAddrs>(address: A) -> bool {
     TcpStream::connect(address).is_ok()
 }
@@ -90,6 +90,13 @@ pub fn is_port_reachable_with_timeout<A: ToSocketAddrs>(address: A, timeout: Dur
 
 /// Returns whether a port is available on the localhost
 /// If the IP version is not specified, it defaults to IPv4. This happens when the port is specified as a number.
+/// 
+/// Beware that checking whether a port is open does not guarantee that it will still be open by the time you 
+/// attempt to use it.
+/// Make sure your code is designed to handle potential time-of-check to time-of-use (TOCTOU) issues.
+/// To help mitigate this, the library provides a retry-based approach via the [`with_free_port`], 
+/// [`with_free_ipv4_port`] and [`with_free_ipv6_port`] functions.
+/// 
 pub fn is_local_port_free<P: Into<Port>>(port: P) -> bool {
     match port.into() {
         Port::Ipv4(port) => is_local_ipv4_port_free(port),
@@ -97,13 +104,27 @@ pub fn is_local_port_free<P: Into<Port>>(port: P) -> bool {
     }
 }
 
-/// Returns whether a port is available on the localhost for IPv4
+/// Returns whether a port is available on the localhost for IPv4.
+///  
+/// Beware that checking whether a port is open does not guarantee that it will still be open by the time you 
+/// attempt to use it.
+/// Make sure your code is designed to handle potential time-of-check to time-of-use (TOCTOU) issues.
+/// To help mitigate this, the library provides a retry-based approach via the [`with_free_port`], 
+/// [`with_free_ipv4_port`] and [`with_free_ipv6_port`] functions.
+/// 
 pub fn is_local_ipv4_port_free(port: u16) -> bool {
     let ipv4 = SocketAddrV4::new(Ipv4Addr::LOCALHOST, port);
     TcpListener::bind(ipv4).is_ok()
 }
 
 /// Returns whether a port is available on the localhost for IPv6
+/// 
+/// Beware that checking whether a port is open does not guarantee that it will still be open by the time you 
+/// attempt to use it.
+/// Make sure your code is designed to handle potential time-of-check to time-of-use (TOCTOU) issues.
+/// To help mitigate this, the library provides a retry-based approach via the [`with_free_port`], 
+/// [`with_free_ipv4_port`] and [`with_free_ipv6_port`] functions.
+/// 
 pub fn is_local_ipv6_port_free(port: u16) -> bool {
     let ipv6 = SocketAddrV6::new(Ipv6Addr::LOCALHOST, port, 0, 0);
     TcpListener::bind(ipv6).is_ok()
@@ -111,6 +132,13 @@ pub fn is_local_ipv6_port_free(port: u16) -> bool {
 
 /// Returns an available localhost port within the specified range.
 /// If the IP version is not specified, it defaults to IPv4. This happens when the port range is specified as a range.
+/// 
+/// Beware that checking whether a port is open does not guarantee that it will still be open by the time you 
+/// attempt to use it.
+/// Make sure your code is designed to handle potential time-of-check to time-of-use (TOCTOU) issues.
+/// To help mitigate this, the library provides a retry-based approach via the [`with_free_port`], 
+/// [`with_free_ipv4_port`] and [`with_free_ipv6_port`] functions.
+/// 
 pub fn free_local_port_in_range<
     P: Into<Ports<R>>,
     R: RangeBounds<u16> + std::iter::Iterator<Item = u16>,
@@ -124,6 +152,13 @@ pub fn free_local_port_in_range<
 }
 
 /// Returns an available localhost port within the specified range for IPv4.
+/// 
+/// Beware that checking whether a port is open does not guarantee that it will still be open by the time you 
+/// attempt to use it.
+/// Make sure your code is designed to handle potential time-of-check to time-of-use (TOCTOU) issues.
+/// To help mitigate this, the library provides a retry-based approach via the [`with_free_port`], 
+/// [`with_free_ipv4_port`] and [`with_free_ipv6_port`] functions.
+/// 
 pub fn free_local_ipv4_port_in_range<R: RangeBounds<u16> + std::iter::Iterator<Item = u16>>(
     port_range: R,
 ) -> Option<u16> {
@@ -133,6 +168,13 @@ pub fn free_local_ipv4_port_in_range<R: RangeBounds<u16> + std::iter::Iterator<I
 }
 
 /// Returns an available localhost port within the specified range for IPv6.
+/// 
+/// Beware that checking whether a port is open does not guarantee that it will still be open by the time you 
+/// attempt to use it.
+/// Make sure your code is designed to handle potential time-of-check to time-of-use (TOCTOU) issues.
+/// To help mitigate this, the library provides a retry-based approach via the [`with_free_port`], 
+/// [`with_free_ipv4_port`] and [`with_free_ipv6_port`] functions.
+/// 
 pub fn free_local_ipv6_port_in_range<R: RangeBounds<u16> + std::iter::Iterator<Item = u16>>(
     port_range: R,
 ) -> Option<u16> {
@@ -141,12 +183,26 @@ pub fn free_local_ipv6_port_in_range<R: RangeBounds<u16> + std::iter::Iterator<I
         .find(|port| is_local_ipv6_port_free(*port))
 }
 
-/// Returns an available localhost port for IPv4
+/// Returns an available localhost port for IPv4.
+/// 
+/// Beware that checking whether a port is open does not guarantee that it will still be open by the time you 
+/// attempt to use it.
+/// Make sure your code is designed to handle potential time-of-check to time-of-use (TOCTOU) issues.
+/// To help mitigate this, the library provides a retry-based approach via the [`with_free_port`], 
+/// [`with_free_ipv4_port`] and [`with_free_ipv6_port`] functions.
+/// 
 pub fn free_local_port() -> Option<u16> {
     free_local_ipv4_port()
 }
 
-/// Returns an available localhost port for IPv4
+/// Returns an available localhost port for IPv4.
+/// 
+/// Beware that checking whether a port is open does not guarantee that it will still be open by the time you 
+/// attempt to use it.
+/// Make sure your code is designed to handle potential time-of-check to time-of-use (TOCTOU) issues.
+/// To help mitigate this, the library provides a retry-based approach via the [`with_free_port`], 
+/// [`with_free_ipv4_port`] and [`with_free_ipv6_port`] functions.
+/// 
 pub fn free_local_ipv4_port() -> Option<u16> {
     let socket = SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0);
     TcpListener::bind(socket)
@@ -155,7 +211,14 @@ pub fn free_local_ipv4_port() -> Option<u16> {
         .ok()
 }
 
-/// Returns an available localhost port for IPv6
+/// Returns an available localhost port for IPv6.
+/// 
+/// Beware that checking whether a port is open does not guarantee that it will still be open by the time you 
+/// attempt to use it.
+/// Make sure your code is designed to handle potential time-of-check to time-of-use (TOCTOU) issues.
+/// To help mitigate this, the library provides a retry-based approach via the [`with_free_port`], 
+/// [`with_free_ipv4_port`] and [`with_free_ipv6_port`] functions.
+/// 
 pub fn free_local_ipv6_port() -> Option<u16> {
     let socket = SocketAddrV6::new(Ipv6Addr::LOCALHOST, 0, 0, 0);
     TcpListener::bind(socket)
@@ -164,7 +227,7 @@ pub fn free_local_ipv6_port() -> Option<u16> {
         .ok()
 }
 
-/// Alias for `with_free_ipv4_port`
+/// Alias for [`with_free_ipv4_port`]-
 /// 
 /// Attempts to find a free IPv4 port on localhost and applies the provided function `f` to it.
 /// 
