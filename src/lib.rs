@@ -189,13 +189,13 @@ pub fn free_local_ipv6_port() -> Option<u16> {
 ///
 /// ```
 /// use port_check::*;
-/// use std::net::*
+/// use std::net::*;
 /// 
-/// let (server, port) = with_free_ipv4_port(|port| {
+/// let (server, port) = with_free_ipv4_port::<_, std::io::Error, _>(|port| {
 ///     // Trying to use the port. If it fails, we try again
 ///     let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))?;
 ///     Ok(listener)
-/// })?;
+/// }).unwrap();
 /// ```
 #[inline]
 pub fn with_free_port<T, E, F: Fn(u16) -> Result<T, E>>(f: F) -> Option<(T, u16)> {
@@ -227,10 +227,10 @@ pub fn with_free_port<T, E, F: Fn(u16) -> Result<T, E>>(f: F) -> Option<(T, u16)
 /// use port_check::*;
 /// use std::net::*;
 /// 
-/// let (server, port) = with_free_ipv4_port(|port| {
+/// let (server, port) = with_free_ipv4_port::<_, std::io::Error, _>(|port| {
 ///     let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))?;
 ///     Ok(listener)
-/// })?;
+/// }).unwrap();
 /// ```
 
 pub fn with_free_ipv4_port<T, E, F: Fn(u16) -> Result<T, E>>(f: F) -> Option<(T, u16)> {
@@ -265,13 +265,13 @@ pub fn with_free_ipv4_port<T, E, F: Fn(u16) -> Result<T, E>>(f: F) -> Option<(T,
 ///
 /// ```
 /// use port_check::*;
-/// use std::net::*
+/// use std::net::*;
 /// 
-/// let (server, port) = with_free_ipv6_port(|port| {
+/// let (server, port) = with_free_ipv6_port::<_, std::io::Error, _>(|port| {
 ///     // Trying to use the port. If it fails, we try again
 ///     let listener = TcpListener::bind(SocketAddrV6::new(Ipv6Addr::LOCALHOST, port, 0, 0))?;
 ///     Ok(listener)
-/// })?;
+/// }).unwrap();
 /// ```
 pub fn with_free_ipv6_port<T, E, F: Fn(u16) -> Result<T, E>>(f: F) -> Option<(T, u16)> {
     while let Some(port) = free_local_ipv6_port() {
