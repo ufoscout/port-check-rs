@@ -487,15 +487,19 @@ mod tests {
         let (_port, _handle) = start_tcp_listner(socket);
 
         assert!(is_port_reachable(address_v4));
-        assert!(free_local_port_in_range(Ports::ipv4(
-            ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port
-        ))
-        .is_none());
+        assert!(
+            free_local_port_in_range(Ports::ipv4(
+                ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port
+            ))
+            .is_none()
+        );
         assert!(!is_port_reachable(address_v6));
-        assert!(free_local_port_in_range(Ports::ipv6(
-            ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port
-        ))
-        .is_some());
+        assert!(
+            free_local_port_in_range(Ports::ipv6(
+                ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port
+            ))
+            .is_some()
+        );
     }
 
     #[test]
@@ -513,15 +517,19 @@ mod tests {
         let (_port, _handle) = start_tcp_listner(socket);
 
         assert!(!is_port_reachable(address_v4));
-        assert!(free_local_port_in_range(Ports::ipv4(
-            ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port
-        ))
-        .is_some());
+        assert!(
+            free_local_port_in_range(Ports::ipv4(
+                ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port
+            ))
+            .is_some()
+        );
         assert!(is_port_reachable(address_v6));
-        assert!(free_local_port_in_range(Ports::ipv6(
-            ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port
-        ))
-        .is_none());
+        assert!(
+            free_local_port_in_range(Ports::ipv6(
+                ipv4_and_ipv6_free_port..=ipv4_and_ipv6_free_port
+            ))
+            .is_none()
+        );
     }
 
     #[test]
@@ -700,13 +708,15 @@ mod tests {
         let listener = TcpListener::bind(&address).unwrap();
         let port = listener.local_addr().unwrap().port();
 
-        let handle = thread::spawn(move || loop {
-            match listener.accept() {
-                Ok(_) => {
-                    println!("TCP connection received!");
-                }
-                Err(e) => {
-                    println!("TCP connection error: {e:?}");
+        let handle = thread::spawn(move || {
+            loop {
+                match listener.accept() {
+                    Ok(_) => {
+                        println!("TCP connection received!");
+                    }
+                    Err(e) => {
+                        println!("TCP connection error: {e:?}");
+                    }
                 }
             }
         });

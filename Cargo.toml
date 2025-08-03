@@ -2,7 +2,7 @@
 name = "port_check"
 version = "0.3.0"
 authors = ["ufoscout <ufoscout@gmail.com>"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 description = "Get a free local port or check if a port somewhere is reachable."
 readme = "README.md"
