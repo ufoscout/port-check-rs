@@ -3,11 +3,17 @@
 ![Build Status](https://github.com/ufoscout/port-check-rs/actions/workflows/build_and_test.yml/badge.svg)
 [![codecov](https://codecov.io/gh/ufoscout/port-check-rs/branch/master/graph/badge.svg)](https://codecov.io/gh/ufoscout/port-check-rs)
 
-A simple rust library to get a free local port or to check if a port somewhere is reachable
+A simple rust library to get a free local port or to check if a port somewhere is reachable.
+
+To be clear, checking whether a port is open does not guarantee that it will still be open by the time you attempt to use it. Make sure your code is designed to handle potential time-of-check to time-of-use (TOCTOU) issues.
+
+To help mitigate this, the library provides a retry-based approach via the `with_free_port` functions.
+
 
 Example:
 ```rust no_run
 use port_check::*;
+use std::net::*;
 use std::time::Duration;
 
 // --------------------------------------------------------------------
@@ -37,4 +43,33 @@ let is_ipv6_port_free = is_local_port_free(Port::ipv6(free_ipv6_port));
 // or
 let is_ipv6_port_free = is_local_ipv6_port_free(free_ipv6_port);
 
+
+
+// --------------------------------------------------------------------
+// Retry-based approach
+//
+// The library provides a retry-based approach via the with_free_port(...) function
+// to help mitigate TOC/TOU race conditions.
+//
+// --------------------------------------------------------------------
+
+
+let (server, port) = with_free_port::<_, std::io::Error, _>(|port| {
+    // Trying to use the port. If it fails, we try again with another port.
+    let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))?;
+    Ok(listener)
+}).unwrap();
+
+let (server, port) = with_free_ipv4_port::<_, std::io::Error, _>(|port| {
+    // Trying to use the port. If it fails, we try again with another port.
+    let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))?;
+    Ok(listener)
+}).unwrap();
+
+
+let (server, port) = with_free_ipv6_port::<_, std::io::Error, _>(|port| {
+    // Trying to use the port. If it fails, we try again with another port.
+    let listener = TcpListener::bind(SocketAddrV6::new(Ipv6Addr::LOCALHOST, port, 0, 0))?;
+    Ok(listener)
+}).unwrap();
 ```
